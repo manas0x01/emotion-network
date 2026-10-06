@@ -1,6 +1,8 @@
 streamlit
 gradio>=6.0.0
+fastapi>=0.120.0
 torch
+torchvision
 transformers
 datasets
 scikit-learn

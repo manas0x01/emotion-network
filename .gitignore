@@ -8,3 +8,4 @@ venv/
 emotion_model/model.safetensors
 .vscode/
 *.png
+logs-*.txt

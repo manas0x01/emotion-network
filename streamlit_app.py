@@ -7,9 +7,18 @@ for 200+ open-vocabulary emotion semantic expansion, and real-time occlusion-bas
 Designed for 100% free permanent deployment on Streamlit Community Cloud (share.streamlit.io).
 """
 
+import os
+import sys
 import math
 import time
 import datetime
+from pathlib import Path
+
+# Ensure application directory is in sys.path for cloud deployment
+APP_DIR = str(Path(__file__).resolve().parent)
+if APP_DIR not in sys.path:
+    sys.path.insert(0, APP_DIR)
+
 import streamlit as st
 import plotly.graph_objects as go
 from core_engine import (

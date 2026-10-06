@@ -133,6 +133,10 @@ class EmotionEngine:
             self.classifier_roberta = self.classifier_modernbert
         # Pipeline B – DistilBERT (6‑class)
         print("[Core: Pipeline B] Loading DistilBERT …")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        if distilbert_path is None or distilbert_path == "./emotion_model":
+            distilbert_path = os.path.join(base_dir, "emotion_model")
+
         # Check if actual weights exist in checkpoint folder
         weights_exist = os.path.exists(os.path.join(distilbert_path, "model.safetensors")) or \
                         os.path.exists(os.path.join(distilbert_path, "pytorch_model.bin"))
@@ -170,9 +174,10 @@ class EmotionEngine:
                 print(f"[!] Fallback to modernbert due to {e}")
                 self.classifier_distilbert = self.classifier_modernbert
         self.custom_labels = ['sadness', 'joy', 'love', 'anger', 'fear', 'surprise']
-        if os.path.exists("label_encoder.pkl"):
+        le_path = os.path.join(base_dir, "label_encoder.pkl")
+        if os.path.exists(le_path):
             try:
-                with open("label_encoder.pkl", "rb") as f:
+                with open(le_path, "rb") as f:
                     le = pickle.load(f)
                 self.custom_labels = [str(x) for x in list(le.classes_)]
                 print(f"[+] Custom DistilBERT Labels: {self.custom_labels}")
