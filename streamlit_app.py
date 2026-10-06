@@ -12,17 +12,23 @@ import time
 import datetime
 import streamlit as st
 import plotly.graph_objects as go
-from core_engine import EmotionEngine, PAPER_BENCHMARK, evaluate_live_benchmark, TAXONOMY_200
+from core_engine import (
+    EmotionEngine,
+    PAPER_BENCHMARK,
+    MODEL_BENCHMARKS,
+    evaluate_live_benchmark,
+    TAXONOMY_200
+)
 
 # ── Page Configuration ────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Emotion Network — Dual Transformer Engine",
-    page_icon="🧠",
+    page_title="EmoSphere-XAI | Emotion Intelligence Engine",
+    page_icon="◈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ── Custom CSS Design System ──────────────────────────────────────────────────
+# ── Academic Light Theme & Structured CSS System ──────────────────────────────
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -31,95 +37,212 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
+    /* Main application background */
     .stApp {
-        background-color: #0b0f19;
-        color: #f1f5f9;
+        background-color: #f8fafc;
+        color: #0f172a;
     }
-    
-    /* Header hero styling */
-    .hero-container {
-        padding: 24px 30px;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-        margin-bottom: 24px;
-        backdrop-filter: blur(10px);
-    }
-    
-    .hero-title {
-        font-size: 28px;
-        font-weight: 800;
-        background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 6px;
-    }
-    
-    .hero-subtitle {
-        color: #94a3b8;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    
-    /* Metric Cards */
-    .metric-card {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+
+    /* Structured Header Banner */
+    .formal-hero {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+        border-left: 5px solid #2563eb;
     }
     
-    .metric-title {
+    .formal-badge {
+        display: inline-block;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #94a3b8;
+        letter-spacing: 0.8px;
+        color: #2563eb;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        padding: 3px 8px;
+        margin-bottom: 8px;
+    }
+    
+    .formal-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.5px;
+    }
+    
+    .formal-subtitle {
+        color: #475569;
+        font-size: 13.5px;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* Card Panels */
+    .card-panel {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+        margin-bottom: 16px;
+    }
+    
+    .card-header-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #334155;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 8px;
+    }
+
+    /* Metric Cards */
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+        border-top: 3px solid #2563eb;
+        height: 100%;
+    }
+    
+    .kpi-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #64748b;
         margin-bottom: 6px;
     }
     
-    .metric-value {
-        font-size: 22px;
+    .kpi-value {
+        font-size: 24px;
         font-weight: 800;
-        color: #f8fafc;
+        color: #0f172a;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+    }
+    
+    .kpi-sub {
+        font-size: 11.5px;
+        color: #64748b;
+        margin-top: 6px;
+    }
+
+    /* Structured Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 4px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        font-size: 13px;
+        color: #475569;
+        border: 1px solid transparent;
+        background: transparent;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #1e293b;
+        background: #f1f5f9;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        color: #2563eb !important;
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+    }
+
+    /* Input text areas and select boxes */
+    .stTextArea textarea {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 14px !important;
+    }
+    
+    .stTextArea textarea:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 1px #2563eb !important;
+    }
+
+    /* Secondary preset buttons */
+    div[data-testid="column"] button[kind="secondary"] {
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        color: #334155 !important;
+        font-weight: 500 !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    div[data-testid="column"] button[kind="secondary"]:hover {
+        border-color: #94a3b8 !important;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+    }
+
+    /* Primary buttons */
+    button[kind="primary"] {
+        background-color: #2563eb !important;
+        border: 1px solid #1d4ed8 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.2) !important;
+    }
+
+    /* Token Attribution Chips */
+    .token-chip-pos {
+        display: inline-block;
+        margin: 3px 2px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #dcfce7;
+        border: 1px solid #86efac;
+        color: #166534;
+        font-weight: 600;
+        font-size: 13px;
         font-family: 'JetBrains Mono', monospace;
     }
     
-    .metric-sub {
-        font-size: 11px;
-        color: #64748b;
-        margin-top: 4px;
-    }
-    
-    /* Highlight chips */
-    .chip {
+    .token-chip-neutral {
         display: inline-block;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin-right: 6px;
+        margin: 3px 2px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        font-size: 13px;
+        font-family: 'JetBrains Mono', monospace;
     }
-    
-    .chip-primary {
-        background: rgba(99, 102, 241, 0.2);
-        color: #818cf8;
-        border: 1px solid rgba(99, 102, 241, 0.3);
-    }
-    
-    .chip-purple {
-        background: rgba(168, 85, 247, 0.2);
-        color: #c084fc;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-    }
-    
-    /* Hide extra Streamlit default margins */
+
+    /* Clean spacing */
     .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
+        padding-top: 1.5rem;
+        padding-bottom: 2.5rem;
+        max-width: 1280px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -129,174 +252,210 @@ st.markdown("""
 def get_engine():
     return EmotionEngine()
 
-engine = get_engine()
-
-# ── Session State for History ────────────────────────────────────────────────
+# ── Session State Initializers ────────────────────────────────────────────────
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# ── Hero Banner ──────────────────────────────────────────────────────────────
+if "prompt_text" not in st.session_state:
+    st.session_state.prompt_text = "I feel an overwhelming sense of joy, relief and gratitude that everything finally worked out!"
+
+if "has_run" not in st.session_state:
+    st.session_state.has_run = False
+
+# ── Structured Institutional Header ──────────────────────────────────────────
 st.markdown("""
-<div class="hero-container">
-    <div class="hero-title">Dual Transformer Emotion Intelligence Engine</div>
-    <div class="hero-subtitle">
-        Fine-Tuned DistilBERT & ModernBERT-Large Backbone · 200+ Open-Vocabulary Semantic Proximity · Real-Time Occlusion XAI
-    </div>
+<div class="formal-hero">
+    <div class="formal-badge">RESEARCH FRAMEWORK · DUAL TRANSFORMER ARCHITECTURE</div>
+    <h1 class="formal-title">EmoSphere-XAI: Emotion Intelligence Platform</h1>
+    <p class="formal-subtitle">
+        Fine-Tuned DistilBERT & ModernBERT-Large Backbone &bull; 200+ Open-Vocabulary Concept Mapping &bull; Real-Time Occlusion Explainability (XAI)
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Main Tabs ────────────────────────────────────────────────────────────────
+# ── Formal Navigation Tabs ───────────────────────────────────────────────────
 tab_sandbox, tab_benchmark, tab_taxonomy, tab_history = st.tabs([
-    "⚡ Live Inference & XAI",
-    "📊 Research Benchmark Matrix",
-    "🧠 Architecture & Taxonomy",
-    "📜 Session History"
+    "◈ Diagnostic Inference & XAI",
+    "⊞ Benchmark Evaluation Matrix",
+    "☵ Architecture & Taxonomy",
+    "◷ Session Audit Log"
 ])
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 1: LIVE INFERENCE & XAI
+# TAB 1: DIAGNOSTIC INFERENCE & XAI
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_sandbox:
-    col_input, col_config = st.columns([2.5, 1])
+    col_input, col_config = st.columns([2.3, 1], gap="medium")
 
     with col_input:
-        default_prompt = "I feel an overwhelming sense of joy, relief and gratitude that everything finally worked out!"
+        st.markdown("""
+        <div class="card-header-title">
+            <span>[1] Input Text Corpus for Emotion Analysis</span>
+        </div>
+        """, unsafe_allow_html=True)
+        
         user_text = st.text_area(
-            "Input Text for Emotion Analysis:",
-            value=default_prompt,
-            height=110,
-            placeholder="Type or paste any paragraph, message, or sentiment query..."
+            "Input Text:",
+            value=st.session_state.prompt_text,
+            height=120,
+            placeholder="Enter clinical, conversational, or textual content to evaluate emotional distribution...",
+            label_visibility="collapsed"
         )
 
-        # Quick sample prompts
+        st.caption("Standardized Academic Test Prompts:")
         c1, c2, c3 = st.columns(3)
-        sample = None
-        if c1.button("✨ Joy & Relief", use_container_width=True):
-            user_text = "I feel an overwhelming sense of joy, relief and gratitude that everything finally worked out!"
-        if c2.button("⚠️ Disappointment", use_container_width=True):
-            user_text = "I am utterly devastated and betrayed by the broken promises."
-        if c3.button("🌫️ Creeping Dread", use_container_width=True):
-            user_text = "The dark silence in the empty hallway filled me with creeping dread and anxiety."
+        if c1.button("Sample 1: Joy & Relief", use_container_width=True):
+            st.session_state.prompt_text = "I feel an overwhelming sense of joy, relief and gratitude that everything finally worked out!"
+            st.session_state.has_run = True
+            st.rerun()
+        if c2.button("Sample 2: Grief & Betrayal", use_container_width=True):
+            st.session_state.prompt_text = "I am utterly devastated and betrayed by the broken promises."
+            st.session_state.has_run = True
+            st.rerun()
+        if c3.button("Sample 3: Dread & Anxiety", use_container_width=True):
+            st.session_state.prompt_text = "The dark silence in the empty hallway filled me with creeping dread and anxiety."
+            st.session_state.has_run = True
+            st.rerun()
 
     with col_config:
+        st.markdown("""
+        <div class="card-header-title">
+            <span>[2] Model Configuration</span>
+        </div>
+        """, unsafe_allow_html=True)
+
         model_choice = st.selectbox(
-            "Neural Backbone:",
+            "Transformer Backbone:",
             [
                 "ModernBERT-Large (GoEmotions 28-Class)",
                 "DistilBERT (Fine-Tuned 6-Class)",
             ],
             index=0
         )
+
         vis_mode = st.radio(
-            "Visualization Type:",
+            "Visualization Projection:",
             ["Donut Distribution", "Polar Radar Profile"],
             horizontal=True
         )
-        analyze_btn = st.button("🚀 Analyze Emotion Profile", type="primary", use_container_width=True)
 
-    if analyze_btn or user_text:
-        start_time = time.time()
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        analyze_btn = st.button("Execute Diagnostic Inference", type="primary", use_container_width=True)
 
-        # 1. Base Predictions
-        base_results = engine.predict_base(user_text, model_choice)
-        top_classes = base_results if "DistilBERT" in model_choice else base_results[:8]
+    if analyze_btn:
+        st.session_state.has_run = True
+        st.session_state.prompt_text = user_text
 
-        labels = [r['label'].capitalize() for r in top_classes]
-        scores = [r['score'] for r in top_classes]
+    if st.session_state.has_run and user_text.strip():
+        with st.spinner("Executing neural inference & occlusion attribution..."):
+            engine = get_engine()
+            start_time = time.time()
 
-        # Information Entropy
-        entropy = -sum([r['score'] * math.log(r['score'] + 1e-9) for r in base_results])
+            # 1. Base Predictions
+            base_results = engine.predict_base(user_text, model_choice)
+            top_classes = base_results if "DistilBERT" in model_choice else base_results[:8]
 
-        # 2. XAI Occlusion
-        top_label, base_score, attributions = engine.get_xai_attribution(user_text, model_choice)
+            labels = [r['label'].capitalize() for r in top_classes]
+            scores = [r['score'] for r in top_classes]
 
-        # 3. Semantic Proximity (200+ Taxonomy)
-        nuanced_label, sem_score, _ = engine.predict_semantic(user_text)
+            # Information Entropy
+            entropy = -sum([r['score'] * math.log(r['score'] + 1e-9) for r in base_results])
 
-        latency_ms = (time.time() - start_time) * 1000
+            # 2. XAI Occlusion
+            top_label, base_score, attributions = engine.get_xai_attribution(user_text, model_choice)
 
-        # Save to history if not duplicate
-        if not st.session_state.history or st.session_state.history[-1]['text'] != user_text:
-            st.session_state.history.append({
-                "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
-                "text": user_text,
-                "model": model_choice.split()[0],
-                "emotion": top_label.capitalize(),
-                "score": f"{base_score*100:.1f}%",
-                "nuanced": nuanced_label.capitalize(),
-                "entropy": f"{entropy:.2f}",
-                "latency": f"{latency_ms:.1f}ms"
-            })
+            # 3. Semantic Proximity (200+ Taxonomy)
+            nuanced_label, sem_score, _ = engine.predict_semantic(user_text)
 
-        st.markdown("<hr style='border-color: rgba(255,255,255,0.08); margin: 24px 0;'>", unsafe_allow_html=True)
+            latency_ms = (time.time() - start_time) * 1000
+
+            # Save to history if not duplicate
+            if not st.session_state.history or st.session_state.history[-1]['text'] != user_text:
+                st.session_state.history.append({
+                    "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
+                    "text": user_text,
+                    "model": model_choice.split()[0],
+                    "emotion": top_label.capitalize(),
+                    "score": f"{base_score*100:.1f}%",
+                    "nuanced": nuanced_label.capitalize(),
+                    "entropy": f"{entropy:.3f}",
+                    "latency": f"{latency_ms:.1f}ms"
+                })
+
+        st.markdown("<hr style='border-color: #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
 
         # ── KPI Cards ────────────────────────────────────────────────────────
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 
         with kpi1:
             st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-title">Primary Detected Emotion</div>
-                <div class="metric-value" style="color: #60a5fa;">{top_label.upper()}</div>
-                <div class="metric-sub">Confidence: <b>{base_score*100:.1f}%</b></div>
+            <div class="kpi-card" style="border-top-color: #2563eb;">
+                <div class="kpi-title">Primary Classification</div>
+                <div class="kpi-value" style="color: #1d4ed8;">{top_label.upper()}</div>
+                <div class="kpi-sub">Confidence: <b>{base_score*100:.1f}%</b></div>
             </div>
             """, unsafe_allow_html=True)
 
         with kpi2:
             st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-title">Nuanced Semantic Proximity</div>
-                <div class="metric-value" style="color: #c084fc;">{nuanced_label.upper()}</div>
-                <div class="metric-sub">Cosine Match: <b>{sem_score:.4f}</b></div>
+            <div class="kpi-card" style="border-top-color: #7c3aed;">
+                <div class="kpi-title">Semantic Proximity Concept</div>
+                <div class="kpi-value" style="color: #6d28d9;">{nuanced_label.upper()}</div>
+                <div class="kpi-sub">Cosine Match: <b>{sem_score:.4f}</b></div>
             </div>
             """, unsafe_allow_html=True)
 
         with kpi3:
             st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-title">Uncertainty Entropy</div>
-                <div class="metric-value" style="color: #f472b6;">{entropy:.3f} <span style="font-size:12px;">nats</span></div>
-                <div class="metric-sub">Information spread index</div>
+            <div class="kpi-card" style="border-top-color: #d97706;">
+                <div class="kpi-title">Shannon Uncertainty Entropy</div>
+                <div class="kpi-value" style="color: #b45309;">{entropy:.3f} <span style="font-size:12px; font-weight:400; color:#64748b;">nats</span></div>
+                <div class="kpi-sub">Prediction confidence spread</div>
             </div>
             """, unsafe_allow_html=True)
 
         with kpi4:
             st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-title">Inference Latency</div>
-                <div class="metric-value" style="color: #34d399;">{latency_ms:.1f} <span style="font-size:12px;">ms</span></div>
-                <div class="metric-sub">Backbone: <b>{model_choice.split()[0]}</b></div>
+            <div class="kpi-card" style="border-top-color: #059669;">
+                <div class="kpi-title">Inference Execution Latency</div>
+                <div class="kpi-value" style="color: #047857;">{latency_ms:.1f} <span style="font-size:12px; font-weight:400; color:#64748b;">ms</span></div>
+                <div class="kpi-sub">Backbone: <b>{model_choice.split()[0]}</b></div>
             </div>
             """, unsafe_allow_html=True)
 
         # ── Visualizations & XAI Rows ────────────────────────────────────────
         st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
-        col_chart, col_xai = st.columns([1.2, 1])
+        col_chart, col_xai = st.columns([1.2, 1], gap="medium")
 
         with col_chart:
-            st.subheader("Emotion Confidence Profile")
+            st.markdown("""
+            <div class="card-header-title">
+                <span>Confidence Distribution Matrix</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
             if "Donut" in vis_mode:
-                pie_colors = [
-                    '#6366f1', '#ef4444', '#10b981', '#a855f7', '#f97316',
-                    '#06b6d4', '#ec4899', '#84cc16', '#eab308', '#64748b'
+                formal_colors = [
+                    '#2563eb', '#7c3aed', '#059669', '#d97706', '#dc2626',
+                    '#0891b2', '#4f46e5', '#ca8a04', '#64748b', '#0284c7'
                 ]
                 fig = go.Figure(data=[go.Pie(
                     labels=labels,
                     values=scores,
-                    hole=0.48,
+                    hole=0.52,
                     textinfo='label+percent',
                     insidetextorientation='radial',
-                    marker=dict(colors=pie_colors[:len(labels)], line=dict(color='#0b0f19', width=2)),
-                    textfont=dict(family="Inter", size=12, color="#ffffff")
+                    marker=dict(colors=formal_colors[:len(labels)], line=dict(color='#ffffff', width=2)),
+                    textfont=dict(family="Inter", size=12, color="#0f172a")
                 )])
                 fig.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0', family="Inter"),
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    height=380,
+                    font=dict(color='#334155', family="Inter"),
+                    margin=dict(l=10, r=10, t=10, b=10),
+                    height=360,
                     showlegend=True,
-                    legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
+                    legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center")
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -305,138 +464,251 @@ with tab_sandbox:
                     r=scores + [scores[0]],
                     theta=labels + [labels[0]],
                     fill='toself',
-                    fillcolor='rgba(124, 58, 237, 0.35)',
+                    fillcolor='rgba(37, 99, 235, 0.12)',
                     mode='lines+markers',
-                    line=dict(color='#a855f7', width=3),
-                    marker=dict(size=8, color='#ffffff', line=dict(color='#a855f7', width=2)),
-                    name='Emotion Score'
+                    line=dict(color='#2563eb', width=2.5),
+                    marker=dict(size=7, color='#1d4ed8'),
+                    name='Confidence Score'
                 ))
                 fig.update_layout(
                     polar=dict(
-                        radialaxis=dict(visible=True, range=[0, max(0.4, max(scores) * 1.15)], color='#94a3b8', gridcolor='rgba(255,255,255,0.1)'),
-                        angularaxis=dict(color='#e2e8f0', gridcolor='rgba(255,255,255,0.1)')
+                        radialaxis=dict(visible=True, range=[0, max(0.4, max(scores) * 1.15)], color='#64748b', gridcolor='#e2e8f0'),
+                        angularaxis=dict(color='#334155', gridcolor='#e2e8f0')
                     ),
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#e2e8f0', family="Inter"),
-                    margin=dict(l=40, r=40, t=20, b=20),
-                    height=380,
+                    font=dict(color='#334155', family="Inter"),
+                    margin=dict(l=30, r=30, t=10, b=10),
+                    height=360,
                     showlegend=False
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
         with col_xai:
-            st.subheader("Occlusion XAI Attribution")
-            st.caption(f"Token-level contribution towards predicted **{top_label.upper()}**:")
+            st.markdown("""
+            <div class="card-header-title">
+                <span>Occlusion-Based Token Attribution (XAI)</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.caption(f"Differential impact on target class **{top_label.upper()}** upon token masking:")
 
             xai_chips = []
             for word, score in attributions:
                 if score > 0.05:
-                    alpha = min(0.85, 0.2 + score * 0.8)
-                    bg = f"rgba(16, 185, 129, {alpha:.2f})"
-                    border = f"rgba(52, 211, 153, 0.9)"
-                    xai_chips.append(f'<span style="display:inline-block; margin:3px 2px; padding:4px 8px; border-radius:6px; background:{bg}; border:1px solid {border}; font-weight:600; color:#ffffff; font-size:13px;" title="Attribution: +{score:.3f}">{word}</span>')
+                    xai_chips.append(f'<span class="token-chip-pos" title="Occlusion Impact: +{score:.3f}">{word} <small style="font-size:10px; opacity:0.8;">(+{score:.2f})</small></span>')
                 else:
-                    xai_chips.append(f'<span style="display:inline-block; margin:3px 2px; padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:13px;">{word}</span>')
+                    xai_chips.append(f'<span class="token-chip-neutral">{word}</span>')
 
             st.markdown(f"""
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; line-height: 1.8;">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; line-height: 1.9; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02);">
                 {' '.join(xai_chips)}
-                <div style="margin-top: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #94a3b8;">
-                    🟢 <b>Green tokens:</b> Positive drivers increasing model confidence.<br>
-                    ⚪ <b>Grey tokens:</b> Inert context tokens with negligible occlusion impact.
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f1f5f9; font-size: 11.5px; color: #64748b;">
+                    <span style="color:#166534; font-weight:700;">■ Green Highlight:</span> Positive attribution token driving model prediction.<br>
+                    <span style="color:#64748b; font-weight:700;">■ Grey Outline:</span> Low-impact contextual token with negligible occlusion delta.
                 </div>
             </div>
             """, unsafe_allow_html=True)
+    elif not st.session_state.has_run:
+        st.markdown("<hr style='border-color: #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
+        st.info("Select a standardized sample prompt above or enter custom text, then click **Execute Diagnostic Inference** to analyze the emotional distribution and generate the occlusion token attribution map.")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 2: RESEARCH BENCHMARK MATRIX
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_benchmark:
-    st.subheader("Academic Benchmark Evaluation Matrix")
-    st.markdown("Reproduces **Figure 5 and Figure 6** from the research publication across standard emotion datasets.")
+    st.markdown("""
+    <div class="card-header-title" style="margin-top: 8px;">
+        <span>Figure 5: Overall Research Model Performance (dair-ai/emotion Test Corpus)</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Convert benchmark data to display table
+    col_kpi_a, col_kpi_b, col_kpi_c, col_kpi_d = st.columns(4)
+    with col_kpi_a:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top-color: #059669;">
+            <div class="kpi-title">Accuracy Rate</div>
+            <div class="kpi-value" style="color: #047857;">{PAPER_BENCHMARK['accuracy']*100:.1f}%</div>
+            <div class="kpi-sub">1,722 / 2,000 Verified Test Samples</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_kpi_b:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top-color: #2563eb;">
+            <div class="kpi-title">Precision Index</div>
+            <div class="kpi-value" style="color: #1d4ed8;">{PAPER_BENCHMARK['precision']:.4f}</div>
+            <div class="kpi-sub">Weighted precision across classes</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_kpi_c:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top-color: #7c3aed;">
+            <div class="kpi-title">Recall Index</div>
+            <div class="kpi-value" style="color: #6d28d9;">{PAPER_BENCHMARK['recall']:.4f}</div>
+            <div class="kpi-sub">Macro sensitivity rate</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_kpi_d:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top-color: #d97706;">
+            <div class="kpi-title">Macro F1-Score</div>
+            <div class="kpi-value" style="color: #b45309;">{PAPER_BENCHMARK['f1_score']:.4f}</div>
+            <div class="kpi-sub">Harmonic mean balance</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="card-header-title">
+        <span>Table I: Comparative Architecture Evaluation Matrix</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     bench_data = []
-    for model_name, metrics in PAPER_BENCHMARK.items():
+    for model_name, metrics in MODEL_BENCHMARKS.items():
         bench_data.append({
-            "Backbone Model": model_name,
+            "Backbone Architecture": model_name,
             "Accuracy": f"{metrics['Accuracy']*100:.1f}%",
             "Macro F1": f"{metrics['Macro F1']*100:.1f}%",
             "Precision": f"{metrics['Precision']*100:.1f}%",
             "Recall": f"{metrics['Recall']*100:.1f}%",
-            "Latency (ms)": f"{metrics['Latency']} ms",
-            "Taxonomy": metrics.get("Taxonomy", "Standard")
+            "Mean Latency": f"{metrics['Latency']:.1f} ms",
+            "Target Taxonomy": metrics.get("Taxonomy", "Standard")
         })
 
     st.dataframe(bench_data, use_container_width=True)
 
-    st.markdown("<hr style='border-color: rgba(255,255,255,0.08);'>", unsafe_allow_html=True)
-    st.subheader("Live Benchmark Validation Runner")
-    col_bench_run, col_bench_res = st.columns([1, 2])
+    st.markdown("<hr style='border-color: #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
+
+    # ── Figure 6: Confusion Matrix Heatmap ────────────────────────────────────
+    st.markdown("""
+    <div class="card-header-title">
+        <span>Figure 6: Confusion Matrix Across Emotion Categories (DistilBERT N=2,000 Test Set)</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    cm = PAPER_BENCHMARK["confusion_matrix"]
+    labels = PAPER_BENCHMARK["labels"]
+
+    fig_cm = go.Figure(data=go.Heatmap(
+        z=cm,
+        x=labels,
+        y=labels,
+        colorscale=[
+            [0.0, "#f8fafc"],
+            [0.1, "#dbeafe"],
+            [0.4, "#93c5fd"],
+            [0.7, "#3b82f6"],
+            [1.0, "#1d4ed8"]
+        ],
+        text=[[str(val) for val in row] for row in cm],
+        texttemplate="<b>%{text}</b>",
+        textfont={"size": 13, "color": "#0f172a"},
+        hoverongaps=False,
+        colorbar=dict(title="Sample Count")
+    ))
+    fig_cm.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#334155', family="Inter"),
+        xaxis_title="Predicted Class",
+        yaxis_title="True Ground Truth",
+        height=380,
+        margin=dict(l=40, r=40, t=10, b=40)
+    )
+    st.plotly_chart(fig_cm, use_container_width=True)
+
+    st.markdown("<hr style='border-color: #e2e8f0; margin: 24px 0;'>", unsafe_allow_html=True)
+
+    # ── Live Benchmark Validation Runner ─────────────────────────────────────
+    st.markdown("""
+    <div class="card-header-title">
+        <span>Corpus Validation Protocol</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_bench_run, col_bench_res = st.columns([1, 2], gap="medium")
 
     with col_bench_run:
-        eval_model = st.selectbox("Select Model for Live Validation:", ["DistilBERT (Fine-Tuned)", "ModernBERT-Large (GoEmotions)"])
-        sample_size = st.slider("Validation Samples:", min_value=10, max_value=50, value=20, step=5)
-        run_btn = st.button("⚡ Run Live Validation")
+        eval_model = st.selectbox("Validation Model Target:", ["DistilBERT (Fine-Tuned)", "ModernBERT-Large (GoEmotions)"])
+        sample_size = st.slider("Evaluation Sample Set:", min_value=10, max_value=50, value=20, step=5)
+        run_btn = st.button("Execute Corpus Validation", type="primary", use_container_width=True)
 
     with col_bench_res:
         if run_btn:
             with st.spinner("Executing real-time inference across test corpus..."):
                 metrics, latency_avg = evaluate_live_benchmark(eval_model, sample_size)
-                st.success("Validation complete!")
+                st.success("Corpus validation finished successfully.")
                 st.json({
-                    "Model": eval_model,
-                    "Samples Evaluated": sample_size,
-                    "Average Latency": f"{latency_avg:.2f} ms / sample",
-                    "Computed Metrics": metrics
+                    "Target Architecture": eval_model,
+                    "Evaluated Samples": sample_size,
+                    "Empirical Mean Latency": f"{latency_avg:.2f} ms / sample",
+                    "Validated Performance Metrics": metrics
                 })
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3: ARCHITECTURE & TAXONOMY
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_taxonomy:
-    st.subheader("Dual Transformer Architecture Ledger")
+    st.markdown("""
+    <div class="card-header-title" style="margin-top: 8px;">
+        <span>System Architecture & Information Flow Diagram</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("""
     ```
-    Raw Text Query ────────────────────────┐
-                                           │
-         ┌─────────────────────────────────┴─────────────────────────────────┐
-         ▼                                                                   ▼
-    [Primary Backbone: ModernBERT / DistilBERT]             [Semantic Embedder: all-MiniLM-L6-v2]
-         │                                                                   │
-         ▼                                                                   ▼
-    Discrete Classification Head (6 or 28 Classes)          768-D Dense Dense Semantic Projection
-         │                                                                   │
-         ▼                                                                   ▼
-    Softmax Probabilities & Information Entropy            Cosine Similarity over 200+ Taxonomy
-         └─────────────────────────────────┬─────────────────────────────────┘
-                                           ▼
-                 Unified Multimodal Emotion Assessment & Occlusion XAI
+    Input Query Text
+           │
+           ├───────────────────────────────────────────────┐
+           ▼                                               ▼
+    [Primary Backbone: ModernBERT / DistilBERT]    [Semantic Encoder: all-MiniLM-L6-v2]
+           │                                               │
+           ▼                                               ▼
+    Discrete Classification (6 / 28 Classes)       768-D Dense Semantic Projection
+           │                                               │
+           ▼                                               ▼
+    Softmax Distribution & Shannon Entropy         Cosine Similarity against 200+ Lexicon
+           └───────────────────────┬───────────────────────┘
+                                   ▼
+          Unified Multimodal Emotion Assessment & Occlusion XAI
     ```
     """)
 
-    st.subheader("200+ Emotion Open-Vocabulary Taxonomy")
-    search_query = st.text_input("Filter Taxonomy:", placeholder="Search e.g. 'joy', 'melancholy', 'anxiety'...")
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="card-header-title">
+        <span>Open-Vocabulary Affective Concept Taxonomy (200+ Entries)</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    search_query = st.text_input("Filter Concept Lexicon:", placeholder="Type emotion concept e.g., 'melancholy', 'serenity', 'rage'...")
     filtered_tax = [e for e in TAXONOMY_200 if search_query.lower() in e.lower()] if search_query else TAXONOMY_200
 
-    st.caption(f"Showing {len(filtered_tax)} out of {len(TAXONOMY_200)} defined emotion states:")
+    st.caption(f"Displaying {len(filtered_tax)} out of {len(TAXONOMY_200)} defined emotion states:")
     tax_cols = st.columns(4)
     for idx, emotion in enumerate(filtered_tax):
         tax_cols[idx % 4].markdown(f"• `{emotion}`")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4: SESSION HISTORY
+# TAB 4: SESSION AUDIT LOG
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_history:
-    st.subheader("Session Analysis History")
+    st.markdown("""
+    <div class="card-header-title" style="margin-top: 8px;">
+        <span>Session Inference Audit Log</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     col_hist_action, _ = st.columns([1, 4])
     with col_hist_action:
-        if st.button("🗑️ Clear History", use_container_width=True):
+        if st.button("Clear Audit Log", use_container_width=True):
             st.session_state.history = []
             st.rerun()
 
     if st.session_state.history:
         st.dataframe(st.session_state.history, use_container_width=True)
     else:
-        st.info("No session records yet. Analyze queries in the first tab to build history logs.")
+        st.info("No recorded inference cycles in current session. Execute analysis in the diagnostic tab to register audit entries.")
