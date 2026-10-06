@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+.venv
+venv/
+.gradio/
+# Optional: exclude large weight binary to keep git push under GitHub's 100MB limit
+emotion_model/model.safetensors
