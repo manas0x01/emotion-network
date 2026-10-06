@@ -121,20 +121,27 @@ class EmotionEngine:
                 print(f"[+] DistilBERT loaded from '{distilbert_path}'.")
             except Exception as e:
                 print(f"[!] Local load failed ({e}), loading cloud model …")
+                try:
+                    self.classifier_distilbert = pipeline(
+                        "text-classification",
+                        model="bhadresh-savani/distilbert-base-uncased-emotion",
+                        top_k=None,
+                        device=self.device_id,
+                    )
+                except Exception:
+                    self.classifier_distilbert = self.classifier_modernbert
+        else:
+            print(f"[!] Checkpoint weights not found locally – loading bhadresh-savani/distilbert-base-uncased-emotion …")
+            try:
                 self.classifier_distilbert = pipeline(
                     "text-classification",
-                    model="bhadresh-psavani/distilbert-base-uncased-emotion",
+                    model="bhadresh-savani/distilbert-base-uncased-emotion",
                     top_k=None,
                     device=self.device_id,
                 )
-        else:
-            print(f"[!] Checkpoint weights not found locally – loading bhadresh-psavani/distilbert-base-uncased-emotion …")
-            self.classifier_distilbert = pipeline(
-                "text-classification",
-                model="bhadresh-psavani/distilbert-base-uncased-emotion",
-                top_k=None,
-                device=self.device_id,
-            )
+            except Exception as e:
+                print(f"[!] Fallback to modernbert due to {e}")
+                self.classifier_distilbert = self.classifier_modernbert
         self.custom_labels = ['sadness', 'joy', 'love', 'anger', 'fear', 'surprise']
         if os.path.exists("label_encoder.pkl"):
             try:
