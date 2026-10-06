@@ -106,17 +106,29 @@ class EmotionEngine:
             self.classifier_roberta = self.classifier_modernbert
         # Pipeline B – DistilBERT (6‑class)
         print("[Core: Pipeline B] Loading DistilBERT …")
-        if os.path.exists(distilbert_path):
-            self.classifier_distilbert = pipeline(
-                "text-classification",
-                model=distilbert_path,
-                tokenizer=distilbert_path,
-                top_k=None,
-                device=self.device_id,
-            )
-            print(f"[+] DistilBERT loaded from '{distilbert_path}'.")
+        # Check if actual weights exist in checkpoint folder
+        weights_exist = os.path.exists(os.path.join(distilbert_path, "model.safetensors")) or \
+                        os.path.exists(os.path.join(distilbert_path, "pytorch_model.bin"))
+        if weights_exist:
+            try:
+                self.classifier_distilbert = pipeline(
+                    "text-classification",
+                    model=distilbert_path,
+                    tokenizer=distilbert_path,
+                    top_k=None,
+                    device=self.device_id,
+                )
+                print(f"[+] DistilBERT loaded from '{distilbert_path}'.")
+            except Exception as e:
+                print(f"[!] Local load failed ({e}), loading cloud model …")
+                self.classifier_distilbert = pipeline(
+                    "text-classification",
+                    model="bhadresh-psavani/distilbert-base-uncased-emotion",
+                    top_k=None,
+                    device=self.device_id,
+                )
         else:
-            print(f"[!] Checkpoint {distilbert_path} not found – loading cloud pretrained emotion model …")
+            print(f"[!] Checkpoint weights not found locally – loading bhadresh-psavani/distilbert-base-uncased-emotion …")
             self.classifier_distilbert = pipeline(
                 "text-classification",
                 model="bhadresh-psavani/distilbert-base-uncased-emotion",
